@@ -1,0 +1,31 @@
+﻿{
+  "name": "claude-traffic-light-connector",
+  "displayName": "Claude Traffic Light Connector",
+  "description": "Connect Claude Code status to desktop traffic light",
+  "version": "0.1.0",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Other"],
+  "activationEvents": ["*"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [{
+      "command": "claude-traffic-light.injectHook",
+      "title": "Claude Traffic Light: Inject Hook"
+    },{
+      "command": "claude-traffic-light.reinjectHook",
+      "title": "Claude Traffic Light: Re-inject Hook"
+    }]
+  },
+  "dependencies": { "ws": "^8.14.0" },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^18.0.0",
+    "@types/ws": "^8.5.5",
+    "typescript": "^5.0.0"
+  },
+  "scripts": { 
+    "vscode:prepublish": "npm run compile", 
+    "compile": "tsc -p ./",
+    "copy-hook": "copy src\\hook-code.js out\\"
+  }
+}
