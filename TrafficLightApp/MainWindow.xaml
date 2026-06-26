@@ -2,25 +2,67 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Claude Traffic Light"
-        Width="120"
-        Height="60"
+        Width="200"
+        Height="80"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
         Topmost="True"
-        ShowInTaskbar="False">
-    <Grid>
-        <Border Background="#202020"
-                CornerRadius="8"
-                Opacity="0.8">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                <Ellipse x:Name="StatusLight"
-                         Width="24"
-                         Height="24"
-                         Fill="#888888"/>
+        ShowInTaskbar="False"
+        x:Name="windowRoot">
+    <Window.ContextMenu>
+        <ContextMenu>
+            <MenuItem Header="透明度">
+                <Slider x:Name="OpacitySlider" 
+                        Minimum="0.3" Maximum="1.0" 
+                        Value="0.8" 
+                        Width="100"
+                        ValueChanged="OpacitySlider_ValueChanged"/>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="退出" Click="ExitMenuItem_Click"/>
+        </ContextMenu>
+    </Window.ContextMenu>
+    <Window.Resources>
+        <Storyboard x:Key="FlashAnimation">
+            <DoubleAnimation x:Name="FlashAnim"
+                             Storyboard.TargetName="StatusLight"
+                             Storyboard.TargetProperty="Opacity"
+                             From="1" To="0.3" Duration="0:0:0.2"
+                             AutoReverse="True"
+                             RepeatBehavior="3x"/>
+        </Storyboard>
+    </Window.Resources>
+    <Border Background="#2D2D30"
+            CornerRadius="10"
+            Opacity="{Binding WindowOpacity, ElementName=windowRoot}"
+            BorderBrush="#404040"
+            BorderThickness="1">
+        <Grid Margin="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <!-- 指示灯 -->
+            <Ellipse x:Name="StatusLight"
+                     Width="28"
+                     Height="28"
+                     Fill="#888888"
+                     Stroke="#FFFFFF"
+                     StrokeThickness="1"
+                     VerticalAlignment="Center">
+                <Ellipse.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="0"/>
+                </Ellipse.Effect>
+            </Ellipse>
+            <!-- 消息气泡 -->
+            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                <TextBlock x:Name="StatusText"
+                           Text="等待连接..."
+                           Foreground="#FFFFFF"
+                           FontSize="12"
+                           TextWrapping="Wrap"/>
             </StackPanel>
-        </Border>
-    </Grid>
+        </Grid>
+    </Border>
 </Window>
