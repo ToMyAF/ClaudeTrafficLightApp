@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -39,17 +40,25 @@ public partial class MainWindow : Window
         InitializeComponent();
         _settings = SettingsService.Load();
         WindowOpacity = _settings.Opacity;
-        OpacitySlider.Value = _settings.Opacity;
         MouseLeftButtonDown += (s, e) => DragMove();
         MouseEnter += (s, e) => WindowOpacity = 1.0;
         MouseLeave += (s, e) => WindowOpacity = _settings.Opacity;
         _wsServer = new WebSocketServer(_settings.WebSocketPort);
         _wsServer.StateChanged += OnStateChanged;
-        Loaded += async (s, e) => await _wsServer.StartAsync();
+        Loaded += MainWindow_Loaded;
         Closing += async (s, e) => await _wsServer.StopAsync();
         _carouselTimer = new System.Timers.Timer(_settings.CarouselIntervalMs);
         _carouselTimer.Elapsed += (s, e) => CarouselNext();
         _carouselTimer.Start();
+    }
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        // Loaded事件中ContextMenu已初始化，可以安全访问OpacitySlider
+        if (OpacitySlider != null)
+        {
+            OpacitySlider.Value = _settings.Opacity;
+        }
+        _ = _wsServer.StartAsync();
     }
     private void OnStateChanged(object? sender, StateChangePayload e)
     {
