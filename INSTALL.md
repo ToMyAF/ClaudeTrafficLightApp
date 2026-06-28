@@ -57,7 +57,7 @@ Claude Traffic Light - 详细安装指南
 
 #### 方式一：从 GitHub Releases 下载（推荐）
 
-1. 访问 [Releases 页面](https://github.com/yourusername/CCLight/releases)
+1. 访问 [Releases 页面](https://github.com/ToMyAF/ClaudeTrafficLightApp/releases)
 2. 找到最新版本
 3. 下载 `ClaudeTrafficLight-vX.X.X.zip` 文件
 
@@ -65,7 +65,7 @@ Claude Traffic Light - 详细安装指南
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/CCLight.git
+git clone https://github.com/ToMyAF/ClaudeTrafficLightApp.git
 cd CCLight/TrafficLightApp
 
 # 编译发布
@@ -220,7 +220,7 @@ code --install-extension claude-traffic-light-connector-0.1.0.vsix
 
 ### Q: 在哪里可以找到旧版本？
 
-**A:** 所有历史版本都可以在 [GitHub Releases](https://github.com/yourusername/CCLight/releases) 页面找到。
+**A:** 所有历史版本都可以在 [GitHub Releases](https://github.com/ToMyAF/ClaudeTrafficLightApp/releases) 页面找到。
 
 ---
 
@@ -229,7 +229,7 @@ code --install-extension claude-traffic-light-connector-0.1.0.vsix
 如果本指南没有解决你的问题：
 
 1. 查看 [README.md](README.md) 中的故障排查部分
-2. 搜索 [GitHub Issues](https://github.com/yourusername/CCLight/issues)
+2. 搜索 [GitHub Issues](https://github.com/ToMyAF/ClaudeTrafficLightApp/issues)
 3. 如未找到解决方案，创建新的 Issue
 
 ---

@@ -167,7 +167,7 @@ ClaudeTrafficLight-v1.0.0.zip
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/CCLight.git
+git clone https://github.com/ToMyAF/ClaudeTrafficLightApp.git
 cd CCLight
 
 # 编译桌面程序
