@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 echo ========================================
 echo   Claude Traffic Light - 发布脚本
@@ -47,17 +47,31 @@ set "OUTPUT_DIR=publish\ClaudeTrafficLight"
 
 mkdir "%OUTPUT_DIR%" 2>nul
 
-:: 复制文件
-copy "%PUBLISH_DIR%\ClaudeTrafficLight.exe" "%OUTPUT_DIR%\" >nul
-copy "..\README.md" "%OUTPUT_DIR%\" >nul
-copy "..\INSTALL.md" "%OUTPUT_DIR%\" >nul
-copy "..\CHANGELOG.md" "%OUTPUT_DIR%\" >nul
-copy "..\LICENSE" "%OUTPUT_DIR%\LICENSE.txt" >nul
+:: 复制主程序
+if exist "%PUBLISH_DIR%\ClaudeTrafficLight.exe" (
+    copy "%PUBLISH_DIR%\ClaudeTrafficLight.exe" "%OUTPUT_DIR%\" >nul
+    echo [成功] ClaudeTrafficLight.exe
+) else (
+    echo [错误] 找不到生成的 ClaudeTrafficLight.exe！
+    echo [信息] 请检查: %PUBLISH_DIR%
+    pause
+    exit /b 1
+)
 
+:: 复制文档
+if exist "..\README.md" copy "..\README.md" "%OUTPUT_DIR%\" >nul && echo [成功] README.md
+if exist "..\INSTALL.md" copy "..\INSTALL.md" "%OUTPUT_DIR%\" >nul && echo [成功] INSTALL.md
+if exist "..\CHANGELOG.md" copy "..\CHANGELOG.md" "%OUTPUT_DIR%\" >nul && echo [成功] CHANGELOG.md
+if exist "..\CONTRIBUTING.md" copy "..\CONTRIBUTING.md" "%OUTPUT_DIR%\" >nul && echo [成功] CONTRIBUTING.md
+if exist "..\LICENSE" copy "..\LICENSE" "%OUTPUT_DIR%\LICENSE.txt" >nul && echo [成功] LICENSE
+
+:: 创建版本信息文件
 echo Claude Traffic Light > "%OUTPUT_DIR%\VERSION.txt"
 echo 构建时间: %date% %time% >> "%OUTPUT_DIR%\VERSION.txt"
+echo [成功] VERSION.txt
 
-echo [成功] 文件已复制到 %OUTPUT_DIR%\
+echo.
+echo [信息] 发布文件已复制到: %OUTPUT_DIR%\
 echo.
 
 :: 完成
@@ -67,14 +81,12 @@ echo ========================================
 echo   发布成功！
 echo ========================================
 echo.
-echo   输出目录: %~dp0%OUTPUT_DIR%
-echo.
 
 :: 显示文件大小
 for %%A in ("%OUTPUT_DIR%\ClaudeTrafficLight.exe") do (
     set /a SIZE_MB=%%~zA / 1048576
 )
-echo   文件大小: %SIZE_MB% MB
+echo   文件大小: !SIZE_MB! MB
 echo.
 echo   文件列表：
 dir /b "%OUTPUT_DIR%"
