@@ -2,7 +2,7 @@
 
 # 🚦 Claude Traffic Light
 
-Windows 桌面悬浮红绿灯程序，实时监控 VSCode 中 Claude Code 扩展的运行状态
+Windows 桌面悬浮红绿灯程序，实时监控 Claude Code 的运行状态
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-blue)](https://dotnet.microsoft.com/)
@@ -25,12 +25,12 @@ Windows 桌面悬浮红绿灯程序，实时监控 VSCode 中 Claude Code 扩展
 
 - 🎯 **实时监控** - 毫秒级响应 Claude Code 状态变化
 - 💬 **气泡消息提示** - 状态变化时显示通知气泡
-- 🖼️ **窗口多开支持** - 支持多个 VSCode 窗口状态轮播
 - 🎨 **可配置透明度** - 自由调整红绿灯透明度
 - 🧲 **边缘自动吸附** - 拖动到屏幕边缘自动对齐
 - 🔔 **系统托盘集成** - 最小化到托盘，不占用任务栏
 - ⚙️ **高度可配置** - 丰富的自定义选项
-- 🚀 **零侵入设计** - 使用 Hook 机制，不修改 Claude Code 内部逻辑
+- 🚀 **零侵入设计** - 使用 Claude Code Hooks，不修改 Claude Code 内部逻辑
+- 📦 **开箱即用** - 无需 VSCode 扩展，直接运行即可
 
 ---
 
@@ -39,14 +39,13 @@ Windows 桌面悬浮红绿灯程序，实时监控 VSCode 中 Claude Code 扩展
 ### 前置要求
 
 - Windows 10 或更高版本
-- VSCode
 - [Claude Code 扩展](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code)
 
 ### 安装步骤
 
 #### 1. 下载桌面程序
 
-从 [Releases](https://github.com/yourusername/CCLight/releases) 页下载最新版本：
+从 [Releases](https://github.com/ToMyAF/ClaudeTrafficLightApp/releases) 页下载最新版本：
 
 ```
 ClaudeTrafficLight-v1.0.0.zip
@@ -54,19 +53,29 @@ ClaudeTrafficLight-v1.0.0.zip
 
 解压后直接运行 `ClaudeTrafficLight.exe` 即可（无需安装）。
 
-#### 2. 安装 VSCode 扩展
+#### 2. 配置 Claude Code Hooks
 
-```bash
-cd vscode-extension
-code --install-extension claude-traffic-light-connector-0.1.0.vsix
+**自动配置** - 右键红绿灯托盘图标 → 选择"配置 Hooks"
+
+或手动在 Claude Code 设置中添加：
+```json
+{
+  "mcpServers": {
+    // ... 其他配置
+  },
+  "hooks": {
+    "UserPromptSubmit": "echo '{\"state\":\"red\",\"content\":\"需要您的输入...\",\"timestamp\":'$(date +%s%3N)',\"label\":\"需要确认\"}' > $HOME/.claude/cc_traffic_light_state",
+    "Stop": "echo '{\"state\":\"green\",\"content\":\"AI输出完成\",\"timestamp\":'$(date +%s%3N)',\"label\":\"输出中\"}' > $HOME/.claude/cc_traffic_light_state",
+    "Elicitation": "echo '{\"state\":\"yellow\",\"content\":\"AI正在思考...\",\"timestamp\":'$(date +%s%3N)',\"label\":\"思考中\"}' > $HOME/.claude/cc_traffic_light_state"
+  }
+}
 ```
 
 #### 3. 开始使用
 
 1. 启动 `ClaudeTrafficLight.exe`
-2. 打开 VSCode（扩展会自动激活）
-3. 正常使用 Claude Code
-4. 信号灯会自动响应状态变化 🎉
+2. 正常使用 Claude Code
+3. 信号灯会自动响应状态变化 🎉
 
 ---
 
@@ -110,28 +119,39 @@ code --install-extension claude-traffic-light-connector-0.1.0.vsix
 
 ## 🏗️ 架构设计
 
-采用 **Claude Code Hooks + 文件轮询 + WebSocket** 方案，简单可靠：
+采用 **Claude Code Hooks + 文件轮询** 方案，超级简单可靠：
 
 ```
-┌─────────────────┐    写文件        ┌─────────────────────┐
-│  VSCode         │ ───────────────> │  状态文件           │
-│  Claude Code    │   (3个Hooks)     │  ~/.claude/         │
-│  Extension      │                  │  cc_traffic_light_state
-└─────────────────┘                  └──────────┬──────────┘
-                                                │ 轮询读取
-                                                ▼
-┌─────────────────┐    WebSocket     ┌─────────────────────┐
-│  桌面红绿灯     │ <────────────── │  VSCode扩展         │
-│  (WPF程序)      │                  │  (localhost:19876)  │
-└─────────────────┘                  └─────────────────────┘
+┌─────────────────────┐
+│  Claude Code        │
+│  (VSCode 扩展)      │
+└─────────┬───────────┘
+          │
+          ▼ 3 个核心 Hook (UserPromptSubmit / Stop / Elicitation)
+┌─────────────────────┐
+│  状态文件           │
+│  ~/.claude/         │
+│  cc_traffic_light_state
+└─────────┬───────────┘
+          │
+          ▼ 桌面程序轮询读取 (默认 500ms 间隔)
+┌─────────────────────┐
+│  红绿灯 WPF 程序     │
+│  - 显示状态灯       │
+│  - 气泡通知         │
+│  - 系统托盘         │
+└─────────────────────┘
 ```
 
 ### 为什么这个方案最稳定？
 
-- ✅ **无侵入性** - 不修改 Claude Code 进程内部逻辑
-- ✅ **简单可靠** - 只有 3 个核心 Hook，不会影响性能
-- ✅ **容错性好** - Hook 失败不影响主程序运行
+- ✅ **零侵入设计** - 只使用 Claude Code 官方 Hook 机制
+- ✅ **超级简单** - 只有文件读写，没有复杂的 IPC 或 WebSocket
+- ✅ **不依赖 VSCode 扩展** - 配置好 Hooks 就能用
+- ✅ **容错性好** - Hook 失败不影响 Claude Code 正常使用
 - ✅ **经验证** - uni-pet 等工具采用的成熟方案
+
+> 💡 **可选功能**: 也支持 WebSocket 方式接入，用于高级扩展或第三方集成。
 
 ---
 
