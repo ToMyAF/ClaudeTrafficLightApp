@@ -48,7 +48,7 @@
 
 ### 🐛 报告 Bug
 
-如果你发现了 Bug，请通过 [GitHub Issues](https://github.com/yourusername/CCLight/issues) 报告。
+如果你发现了 Bug，请通过 [GitHub Issues](https://github.com/ToMyAF/ClaudeTrafficLightApp/issues) 报告。
 
 **报告 Bug 时请包含以下信息：**
 
@@ -74,7 +74,7 @@
 
 ### 💡 提出功能建议
 
-我们欢迎各种功能建议！请通过 [GitHub Issues](https://github.com/yourusername/CCLight/issues) 提交。
+我们欢迎各种功能建议！请通过 [GitHub Issues](https://github.com/ToMyAF/ClaudeTrafficLightApp/issues) 提交。
 
 **功能建议应包含：**
 
