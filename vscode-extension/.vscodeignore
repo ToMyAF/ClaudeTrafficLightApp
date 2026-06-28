@@ -1,8 +1,10 @@
 ﻿.vscode/**
 .vscode-test/**
 src/**
+.gitignore
 tsconfig.json
-npm-debug.log
-yarn-error.log
-**/*.map
-node_modules/**
+node_modules/@types/**
+node_modules/typescript/**
+node_modules/cpx/**
+.vscodeignore
+.codegraph/**

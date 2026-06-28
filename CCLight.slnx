@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="TrafficLightApp.Tests/TrafficLightApp.Tests.csproj" />
+  <Project Path="TrafficLightApp/TrafficLightApp.csproj" />
+</Solution>

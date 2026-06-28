@@ -1,31 +1,92 @@
-﻿{
+{
   "name": "claude-traffic-light-connector",
   "displayName": "Claude Traffic Light Connector",
   "description": "Connect Claude Code status to desktop traffic light",
   "version": "0.1.0",
+  "publisher": "local-user",
   "engines": { "vscode": "^1.80.0" },
   "categories": ["Other"],
   "activationEvents": ["*"],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [{
-      "command": "claude-traffic-light.injectHook",
-      "title": "Claude Traffic Light: Inject Hook"
+      "command": "claude-traffic-light.showStatus",
+      "title": "Claude Traffic Light: Show Status",
+      "icon": "$(info)"
     },{
-      "command": "claude-traffic-light.reinjectHook",
-      "title": "Claude Traffic Light: Re-inject Hook"
-    }]
+      "command": "claude-traffic-light.reconnect",
+      "title": "Claude Traffic Light: Reconnect WebSocket",
+      "icon": "$(refresh)"
+    },{
+      "command": "claude-traffic-light.setThinking",
+      "title": "🟡 Claude Traffic Light: Set Thinking",
+      "icon": "$(sync~spin)"
+    },{
+      "command": "claude-traffic-light.setWriting",
+      "title": "🟢 Claude Traffic Light: Set Writing",
+      "icon": "$(edit)"
+    },{
+      "command": "claude-traffic-light.setConfirm",
+      "title": "🔴 Claude Traffic Light: Set Confirm",
+      "icon": "$(check)"
+    },{
+      "command": "claude-traffic-light.setIdle",
+      "title": "⚪ Claude Traffic Light: Set Idle",
+      "icon": "$(circle)"
+    },{
+      "command": "claude-traffic-light.quickSwitch",
+      "title": "🚦 Claude Traffic Light: Quick Switch",
+      "icon": "$(zap)"
+    }],
+    "keybindings": [{
+      "command": "claude-traffic-light.quickSwitch",
+      "key": "ctrl+alt+c",
+      "mac": "cmd+alt+c",
+      "when": "true"
+    }],
+    "configuration": {
+      "title": "Claude Traffic Light",
+      "properties": {
+        "claudeTrafficLight.websocket.host": {
+          "type": "string",
+          "default": "localhost",
+          "description": "WebSocket 服务器地址"
+        },
+        "claudeTrafficLight.websocket.port": {
+          "type": "number",
+          "default": 19876,
+          "description": "WebSocket 服务器端口"
+        },
+        "claudeTrafficLight.showConnectionNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "显示连接状态通知弹窗"
+        },
+        "claudeTrafficLight.showStateChanges": {
+          "type": "boolean",
+          "default": false,
+          "description": "在控制台显示所有状态变化"
+        },
+        "claudeTrafficLight.websocket.maxReconnectAttempts": {
+          "type": "number",
+          "default": 10,
+          "description": "最大重连尝试次数，0表示无限重试",
+          "minimum": 0
+        }
+      }
+    }
   },
   "dependencies": { "ws": "^8.14.0" },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
     "@types/node": "^18.0.0",
     "@types/ws": "^8.5.5",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "cpx": "^1.5.0"
   },
-  "scripts": { 
-    "vscode:prepublish": "npm run compile", 
-    "compile": "tsc -p ./",
-    "copy-hook": "copy src\\hook-code.js out\\"
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./ && npm run copy-hook",
+    "copy-hook": "cpx src/hook-code.js out/"
   }
 }

@@ -4,7 +4,25 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>ClaudeTrafficLight</AssemblyName>
     <RootNamespace>ClaudeTrafficLight</RootNamespace>
+
+    <!-- 版本信息 -->
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>Claude Traffic Light</Product>
+    <Description>Windows桌面悬浮红绿灯程序，实时监控VSCode中Claude Code扩展的运行状态</Description>
+    <Copyright>Copyright © 2024</Copyright>
+    <Company>Claude Traffic Light</Company>
+
+    <!-- 发布配置 -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 </Project>
