@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Claude Traffic Light"
         Width="64"
-        Height="200"
+        Height="220"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -304,7 +304,7 @@
         <Border x:Name="LightContainer"
                 Grid.Column="0"
                 Width="64"
-                Height="192"
+                Height="210"
                 CornerRadius="32"
                 BorderThickness="1.5"
                 BorderBrush="#666666"
@@ -319,7 +319,7 @@
 
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <!-- 黄灯 - 思考中 -->
-                <Grid Width="56" Height="60" Margin="0,0,0,0">
+                <Grid Width="56" Height="64" Margin="0,2,0,2">
                     <!-- 外层：纯色灯环（奥运奖牌设计） -->
                     <Ellipse x:Name="YellowLightOuter"
                              Width="40" Height="40"
@@ -347,7 +347,7 @@
                 </Grid>
 
                 <!-- 绿灯 - 输出中 -->
-                <Grid Width="56" Height="60" Margin="0,0,0,0">
+                <Grid Width="56" Height="64" Margin="0,2,0,2">
                     <!-- 外层：纯色灯环（奥运奖牌设计） -->
                     <Ellipse x:Name="GreenLightOuter"
                              Width="40" Height="40"
@@ -375,7 +375,7 @@
                 </Grid>
 
                 <!-- 红灯 - 需要确认 -->
-                <Grid Width="56" Height="60" Margin="0,0,0,0">
+                <Grid Width="56" Height="64" Margin="0,2,0,2">
                     <!-- 外层：纯色灯环（奥运奖牌设计） -->
                     <Ellipse x:Name="RedLightOuter"
                              Width="40" Height="40"
@@ -408,7 +408,7 @@
         <Border x:Name="LedTextContainer"
                 Grid.Column="1"
                 Width="24"
-                Height="132"
+                Height="180"
                 Margin="6,0,0,0"
                 Background="#1A000000"
                 CornerRadius="6"
@@ -416,7 +416,7 @@
                 VerticalAlignment="Center"
                 Visibility="Visible">
 
-            <Canvas x:Name="LedCanvas" ClipToBounds="True" Height="184" Width="30">
+            <Canvas x:Name="LedCanvas" ClipToBounds="True" Height="180" Width="30">
                 <!-- 竖排滚动的 LED 发光文字 -->
                 <TextBlock x:Name="LedTextBlock"
                            FontSize="16"
