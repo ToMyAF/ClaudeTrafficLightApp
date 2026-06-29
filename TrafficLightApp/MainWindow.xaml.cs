@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using ClaudeTrafficLight.Services;
 
@@ -126,10 +127,13 @@ namespace ClaudeTrafficLight
             // 初始化文件轮询定时器（使用配置的间隔）
             _filePollingTimer = new System.Timers.Timer(_settings.FilePollingIntervalMs);
             _filePollingTimer.Elapsed += (s, e) => CheckStateFile();
+            _filePollingTimer.Start();
+            Debug.WriteLine($"[轮询] 定时器已启动，间隔: {_settings.FilePollingIntervalMs}ms");
 
             // 初始化 LED 文字滚动定时器（每50ms滚动一点）
             _scrollTimer = new System.Timers.Timer(50);
             _scrollTimer.Elapsed += (s, e) => ScrollLedText();
+            _scrollTimer.Start();
 
             // 初始化端口文本框
             PortTextBox.Text = _settings.WebSocketPort.ToString();
@@ -157,9 +161,9 @@ namespace ClaudeTrafficLight
             }
             catch { }
 
-            // 应用宽度配置
+            // 应用宽度配置（LightContainer.Height由XAML固定为192px，确保发光完整显示）
             Width = _settings.TotalWindowWidth;
-            LightContainer.Width = _settings.LightWidth;
+            LightContainer.Width = Math.Max(60, _settings.LightWidth); // 确保至少60px宽
             LedTextContainer.Width = _settings.LedWidth;
             LedCanvas.Width = _settings.LedWidth;
 
@@ -182,6 +186,9 @@ namespace ClaudeTrafficLight
 
             // 初始检查一次
             CheckStateFile();
+
+            // 应用GIF灯环尺寸
+            ApplyGifLightSize();
         }
 
         // 检查状态文件（支持 JSON 和简单文本两种格式）
@@ -189,12 +196,16 @@ namespace ClaudeTrafficLight
         {
             try
             {
+                Debug.WriteLine($"[轮询] 检查状态文件: {_stateFile}");
+
                 if (!File.Exists(_stateFile))
                 {
+                    Debug.WriteLine($"[轮询] 状态文件不存在");
                     return;
                 }
 
                 var rawContent = File.ReadAllText(_stateFile).Trim();
+                Debug.WriteLine($"[轮询] 读取到内容: {rawContent}");
 
                 // 尝试解析为 JSON 格式
                 if (rawContent.StartsWith("{"))
@@ -324,24 +335,44 @@ namespace ClaudeTrafficLight
             {
                 EnableGifCheckBox.IsChecked = _settings.EnableGifAnimation;
             }
+            if (GifLightOpacitySlider != null)
+            {
+                GifLightOpacitySlider.Value = _settings.GifLightOpacity;
+                Debug.WriteLine($"[加载设置] GIF灯透明度: {_settings.GifLightOpacity}");
+            }
+            if (GifOpacityText != null)
+            {
+                GifOpacityText.Text = $"当前: {_settings.GifLightOpacity:F1}";
+            }
+            if (LightRingSizeTextBox != null)
+            {
+                LightRingSizeTextBox.Text = _settings.LightRingSize.ToString();
+            }
+            if (GifSizeTextBox != null)
+            {
+                GifSizeTextBox.Text = _settings.GifSize.ToString();
+            }
+            if (YellowGifPathTextBox != null)
+            {
+                YellowGifPathTextBox.Text = _settings.YellowGifPath;
+                Debug.WriteLine($"[加载设置] 黄灯GIF路径: {_settings.YellowGifPath}");
+            }
+            if (RedGifPathTextBox != null)
+            {
+                RedGifPathTextBox.Text = _settings.RedGifPath;
+                Debug.WriteLine($"[加载设置] 红灯GIF路径: {_settings.RedGifPath}");
+            }
+            if (GreenGifPathTextBox != null)
+            {
+                GreenGifPathTextBox.Text = _settings.GreenGifPath;
+                Debug.WriteLine($"[加载设置] 绿灯GIF路径: {_settings.GreenGifPath}");
+            }
 
             // 开机启动状态
             var autoStartMenuItem = ContextMenu?.Items.OfType<MenuItem>().FirstOrDefault(m => m.Header?.ToString() == "开机启动");
             if (autoStartMenuItem != null)
             {
                 autoStartMenuItem.IsChecked = _settings.AutoStart;
-            }
-            if (YellowGifPathTextBox != null)
-            {
-                YellowGifPathTextBox.Text = _settings.YellowGifPath;
-            }
-            if (RedGifPathTextBox != null)
-            {
-                RedGifPathTextBox.Text = _settings.RedGifPath;
-            }
-            if (GreenGifPathTextBox != null)
-            {
-                GreenGifPathTextBox.Text = _settings.GreenGifPath;
             }
         }
 
@@ -370,8 +401,8 @@ namespace ClaudeTrafficLight
                 ServerStatusIcon.Text = count > 0 ? "🔌" : "✅";
 
                 // 客户端连接成功：绿灯常量 + 气泡提示
-                SetLightState(GreenLight, GreenGlow, true, _greenColor);
-                StartBreathingAnimation(GreenLight);
+                SetLightState(GreenLightOuter, GreenGlow, true, _greenColor);
+                StartBreathingAnimation(GreenLightOuter);
                 _currentState = "writing";
 
                 // 显示 LED 提示
@@ -402,13 +433,20 @@ namespace ClaudeTrafficLight
             YellowGif.Visibility = Visibility.Collapsed;
             GreenGif.Visibility = Visibility.Collapsed;
             RedGif.Visibility = Visibility.Collapsed;
-            YellowLight.Visibility = Visibility.Visible;
-            GreenLight.Visibility = Visibility.Visible;
-            RedLight.Visibility = Visibility.Visible;
 
-            SetLightState(YellowLight, YellowGlow, false, _yellowColor);
-            SetLightState(GreenLight, GreenGlow, false, _greenColor);
-            SetLightState(RedLight, RedGlow, false, _redColor);
+            // 清除GIF源（释放资源）
+            YellowGif.Source = null;
+            GreenGif.Source = null;
+            RedGif.Source = null;
+
+            // 显示静态灯
+            YellowLightOuter.Visibility = Visibility.Visible;
+            GreenLightOuter.Visibility = Visibility.Visible;
+            RedLightOuter.Visibility = Visibility.Visible;
+
+            SetLightState(YellowLightOuter, YellowGlow, false, _yellowColor);
+            SetLightState(GreenLightOuter, GreenGlow, false, _greenColor);
+            SetLightState(RedLightOuter, RedGlow, false, _redColor);
             HideLedText();
         }
 
@@ -437,7 +475,7 @@ namespace ClaudeTrafficLight
                     }
                     return;
                 case "thinking":
-                    targetLight = YellowLight;
+                    targetLight = YellowLightOuter;
                     targetGlow = YellowGlow;
                     glowColor = _yellowColor;
                     labelBrush = _yellowLabelBrush;
@@ -445,7 +483,7 @@ namespace ClaudeTrafficLight
                     defaultMessage = _settings.YellowMessageText;
                     break;
                 case "writing":
-                    targetLight = GreenLight;
+                    targetLight = GreenLightOuter;
                     targetGlow = GreenGlow;
                     glowColor = _greenColor;
                     labelBrush = _greenLabelBrush;
@@ -453,7 +491,7 @@ namespace ClaudeTrafficLight
                     defaultMessage = _settings.GreenMessageText;
                     break;
                 case "needs_confirm":
-                    targetLight = RedLight;
+                    targetLight = RedLightOuter;
                     targetGlow = RedGlow;
                     glowColor = _redColor;
                     labelBrush = _redLabelBrush;
@@ -461,7 +499,7 @@ namespace ClaudeTrafficLight
                     defaultMessage = _settings.RedMessageText;
                     break;
                 case "error":
-                    targetLight = RedLight;
+                    targetLight = RedLightOuter;
                     targetGlow = RedGlow;
                     glowColor = _redColor;
                     labelBrush = _redLabelBrush;
@@ -475,44 +513,75 @@ namespace ClaudeTrafficLight
 
             _currentState = state;
 
+            // 先隐藏所有GIF
+            YellowGif.Visibility = Visibility.Collapsed;
+            GreenGif.Visibility = Visibility.Collapsed;
+            RedGif.Visibility = Visibility.Collapsed;
+
             // 激活灯光
-            SetLightState(targetLight, targetGlow, true, glowColor);
+            SetLightState(targetLight, targetGlow, true, glowColor, 1.0);
 
-            // 如果启用了GIF动画，显示对应的GIF
-            if (_settings.EnableGifAnimation)
-            {
-                if (state == "thinking" && !string.IsNullOrEmpty(_settings.YellowGifPath) && File.Exists(_settings.YellowGifPath))
-                {
-                    YellowGif.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(_settings.YellowGifPath));
-                    YellowGif.Visibility = Visibility.Visible;
-                    YellowLight.Visibility = Visibility.Collapsed; // 隐藏静态灯
-                }
-                else if (state == "writing" && !string.IsNullOrEmpty(_settings.GreenGifPath) && File.Exists(_settings.GreenGifPath))
-                {
-                    GreenGif.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(_settings.GreenGifPath));
-                    GreenGif.Visibility = Visibility.Visible;
-                    GreenLight.Visibility = Visibility.Collapsed; // 隐藏静态灯
-                }
-                else if (state == "needs_confirm" && !string.IsNullOrEmpty(_settings.RedGifPath) && File.Exists(_settings.RedGifPath))
-                {
-                    RedGif.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(_settings.RedGifPath));
-                    RedGif.Visibility = Visibility.Visible;
-                    RedLight.Visibility = Visibility.Collapsed; // 隐藏静态灯
-                }
-            }
+            // 检查是否有配置的GIF
+            bool hasGif = _settings.EnableGifAnimation &&
+                ((state == "thinking" && !string.IsNullOrEmpty(_settings.YellowGifPath) && File.Exists(_settings.YellowGifPath)) ||
+                 (state == "writing" && !string.IsNullOrEmpty(_settings.GreenGifPath) && File.Exists(_settings.GreenGifPath)) ||
+                 (state == "needs_confirm" && !string.IsNullOrEmpty(_settings.RedGifPath) && File.Exists(_settings.RedGifPath)));
 
-            // 开始呼吸动画（仅对静态灯）
-            if (state == "thinking" && YellowGif.Visibility == Visibility.Collapsed)
+            Debug.WriteLine($"[GIF] 状态={state}, 有GIF={hasGif}");
+
+            // 如果有GIF，显示中心GIF（灯保持完整鲜艳作为环绕光环）
+            if (hasGif)
             {
-                StartBreathingAnimation(targetLight);
+                string? gifPath = null;
+                Image? gifControl = null;
+
+                if (state == "thinking")
+                {
+                    gifPath = _settings.YellowGifPath;
+                    gifControl = YellowGif;
+                }
+                else if (state == "writing")
+                {
+                    gifPath = _settings.GreenGifPath;
+                    gifControl = GreenGif;
+                }
+                else if (state == "needs_confirm")
+                {
+                    gifPath = _settings.RedGifPath;
+                    gifControl = RedGif;
+                }
+
+                if (gifControl != null && !string.IsNullOrEmpty(gifPath))
+                {
+                    try
+                    {
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.UriSource = new Uri(gifPath);
+                        bitmap.CacheOption = BitmapCacheOption.Default;
+                        bitmap.EndInit();
+
+                        gifControl.Source = bitmap;
+                        gifControl.Visibility = Visibility.Visible;
+
+                        // 奥运奖牌设计：灯保持完整鲜艳作为外环，GIF在中心显示
+                        // 灯保持 Opacity=1.0，颜色完全鲜艳
+                        targetLight.Opacity = 1.0;
+
+                        Debug.WriteLine($"[GIF] GIF已显示: {gifPath}");
+                        Debug.WriteLine($"[GIF] 灯保持完整鲜艳，Opacity={targetLight.Opacity}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[GIF] 加载失败: {ex.Message}");
+                    }
+                }
             }
-            else if (state == "writing" && GreenGif.Visibility == Visibility.Collapsed)
+            else
             {
+                // 没有GIF时：播放呼吸动画
                 StartBreathingAnimation(targetLight);
-            }
-            else if (state == "needs_confirm" && RedGif.Visibility == Visibility.Collapsed)
-            {
-                StartBreathingAnimation(targetLight);
+                Debug.WriteLine($"[GIF] 无GIF，播放呼吸动画");
             }
 
             // 确定显示的消息：优先使用传入的消息，否则使用自定义默认消息
@@ -537,7 +606,7 @@ namespace ClaudeTrafficLight
             }
         }
 
-        private void SetLightState(Ellipse light, DropShadowEffect glow, bool isOn, Color glowColor)
+        private void SetLightState(Ellipse light, DropShadowEffect glow, bool isOn, Color glowColor, double opacity = 1.0)
         {
             if (isOn)
             {
@@ -558,7 +627,7 @@ namespace ClaudeTrafficLight
 
                 light.Fill = brush != null ? brush : new SolidColorBrush(glowColor);
                 light.Stroke = new SolidColorBrush(glowColor);
-                light.Opacity = 1.0;
+                light.Opacity = opacity; // 使用传入的透明度
 
                 // 发光效果
                 glow.BlurRadius = 18;
@@ -970,6 +1039,21 @@ namespace ClaudeTrafficLight
                 return;
             }
 
+            // 边界检查：防止设置过大/过小导致布局问题
+            windowWidth = Math.Max(60, Math.Min(200, windowWidth));
+            lightWidth = Math.Max(60, Math.Min(100, lightWidth));
+            ledWidth = Math.Max(20, Math.Min(60, ledWidth));
+
+            // 智能适配：根据容器宽度自动推荐并设置灯环大小
+            // 公式：灯环宽度 = 容器宽度 - BorderThickness - Padding - 发光预留边距
+            // 发光需要至少8px边距防止BlurRadius=18被截断
+            int recommendedRingSize = lightWidth - 27; // Border(3) + Padding(4) + 发光(20)
+            recommendedRingSize = Math.Max(30, Math.Min(40, recommendedRingSize));
+
+            // 同步更新灯环设置（保持GIF大小 = 灯环大小 - 10px）
+            _settings.LightRingSize = recommendedRingSize;
+            _settings.GifSize = recommendedRingSize - 10;
+
             // 保存设置
             _settings.TotalWindowWidth = windowWidth;
             _settings.LightWidth = lightWidth;
@@ -982,13 +1066,16 @@ namespace ClaudeTrafficLight
             LedTextContainer.Width = ledWidth;
             LedCanvas.Width = ledWidth;
 
+            // 同步更新灯环大小
+            ApplyGifLightSize();
+
             // 关闭右键菜单
             if (ContextMenu != null)
             {
                 ContextMenu.IsOpen = false;
             }
 
-            MessageBox.Show($"尺寸设置已应用！\n窗口宽度: {windowWidth}px\n信号灯宽度: {lightWidth}px\nLED区域宽度: {ledWidth}px",
+            MessageBox.Show($"尺寸设置已智能适配！\n\n窗口宽度: {windowWidth}px\n信号灯宽度: {lightWidth}px\n✅ 灯环自动适配: {recommendedRingSize}px\nLED区域宽度: {ledWidth}px",
                 "成功", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -1069,6 +1156,72 @@ namespace ClaudeTrafficLight
             SettingsService.Save(_settings);
         }
 
+        private void GifLightOpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_settings == null || GifOpacityText == null) return;
+            _settings.GifLightOpacity = Math.Round(e.NewValue, 1);
+            GifOpacityText.Text = $"当前: {_settings.GifLightOpacity:F1}";
+            Debug.WriteLine($"[GIF] 透明度已调整: {_settings.GifLightOpacity}");
+        }
+
+        /// <summary>
+        /// 应用GIF灯环尺寸设置（智能双向适配）
+        /// </summary>
+        private void ApplyGifLightSize()
+        {
+            try
+            {
+                // 边界检查
+                double safeLightRingSize = Math.Max(30, Math.Min(40, _settings.LightRingSize));
+                double safeGifSize = Math.Max(20, Math.Min(30, _settings.GifSize));
+
+                // 反向检查：如果灯环太大，自动增大容器确保发光完整
+                // 容器最小宽度 = 灯环宽度 + BorderThickness(3) + Padding(4) + 发光预留(16)
+                double minLightWidth = safeLightRingSize + 23;
+                if (_settings.LightWidth < minLightWidth)
+                {
+                    Debug.WriteLine($"[GIF] 容器宽度不足，自动增大: {_settings.LightWidth}px -> {minLightWidth}px");
+                    _settings.LightWidth = (int)Math.Ceiling(minLightWidth);
+                    LightContainer.Width = _settings.LightWidth;
+                    SettingsService.Save(_settings);
+                }
+
+                // 计算垂直Margin：确保发光效果(BlurRadius=18)有足够空间显示
+                // Grid高度60px，上下各留至少10px边距
+                double verticalMargin = (60 - safeLightRingSize) / 2;
+                verticalMargin = Math.Max(10, verticalMargin);
+
+                // 黄灯
+                YellowLightOuter.Width = safeLightRingSize;
+                YellowLightOuter.Height = safeLightRingSize;
+                YellowGif.Width = safeGifSize;
+                YellowGif.Height = safeGifSize;
+
+                // 绿灯
+                GreenLightOuter.Width = safeLightRingSize;
+                GreenLightOuter.Height = safeLightRingSize;
+                GreenGif.Width = safeGifSize;
+                GreenGif.Height = safeGifSize;
+
+                // 红灯
+                RedLightOuter.Width = safeLightRingSize;
+                RedLightOuter.Height = safeLightRingSize;
+                RedGif.Width = safeGifSize;
+                RedGif.Height = safeGifSize;
+
+                // 设置Margin确保发光不被截断
+                YellowLightOuter.Margin = new Thickness(0, verticalMargin, 0, verticalMargin);
+                GreenLightOuter.Margin = new Thickness(0, verticalMargin, 0, verticalMargin);
+                RedLightOuter.Margin = new Thickness(0, verticalMargin, 0, verticalMargin);
+
+                Debug.WriteLine($"[GIF] 尺寸已应用 - 灯环:{safeLightRingSize}px, 容器:{_settings.LightWidth}px, 垂直边距:{verticalMargin}px");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[GIF] 尺寸设置失败: {ex.Message}");
+            }
+        }
+
         private void BrowseYellowGif_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
@@ -1079,7 +1232,14 @@ namespace ClaudeTrafficLight
 
             if (dialog.ShowDialog() == true)
             {
-                YellowGifPathTextBox.Text = dialog.FileName;
+                Debug.WriteLine($"[浏览] 选择的黄灯GIF: {dialog.FileName}");
+                _settings.YellowGifPath = dialog.FileName;
+                SettingsService.Save(_settings);
+                if (YellowGifPathTextBox != null)
+                {
+                    YellowGifPathTextBox.Text = dialog.FileName;
+                    Debug.WriteLine($"[浏览] 已设置文本框和保存: {YellowGifPathTextBox.Text}");
+                }
             }
         }
 
@@ -1093,7 +1253,14 @@ namespace ClaudeTrafficLight
 
             if (dialog.ShowDialog() == true)
             {
-                RedGifPathTextBox.Text = dialog.FileName;
+                Debug.WriteLine($"[浏览] 选择的红灯GIF: {dialog.FileName}");
+                _settings.RedGifPath = dialog.FileName;
+                SettingsService.Save(_settings);
+                if (RedGifPathTextBox != null)
+                {
+                    RedGifPathTextBox.Text = dialog.FileName;
+                    Debug.WriteLine($"[浏览] 已设置文本框和保存: {RedGifPathTextBox.Text}");
+                }
             }
         }
 
@@ -1107,7 +1274,10 @@ namespace ClaudeTrafficLight
 
             if (dialog.ShowDialog() == true)
             {
+                _settings.GreenGifPath = dialog.FileName;
+                SettingsService.Save(_settings);
                 GreenGifPathTextBox.Text = dialog.FileName;
+                Debug.WriteLine($"[浏览] 已设置文本框和保存: {GreenGifPathTextBox.Text}");
             }
         }
 
@@ -1117,6 +1287,27 @@ namespace ClaudeTrafficLight
             _settings.RedGifPath = RedGifPathTextBox.Text.Trim();
             _settings.GreenGifPath = GreenGifPathTextBox.Text.Trim();
             _settings.EnableGifAnimation = EnableGifCheckBox.IsChecked ?? true;
+            _settings.GifLightOpacity = Math.Round(GifLightOpacitySlider.Value, 1);
+
+            // 解析尺寸设置 - 限制最大尺寸防止挤压
+            if (double.TryParse(LightRingSizeTextBox.Text, out double ringSize))
+            {
+                _settings.LightRingSize = Math.Max(30, Math.Min(40, ringSize));
+            }
+            if (double.TryParse(GifSizeTextBox.Text, out double gifSize))
+            {
+                _settings.GifSize = Math.Max(20, Math.Min(30, gifSize));
+            }
+
+            Debug.WriteLine($"[GIF保存] 黄灯: {_settings.YellowGifPath}");
+            Debug.WriteLine($"[GIF保存] 红灯: {_settings.RedGifPath}");
+            Debug.WriteLine($"[GIF保存] 绿灯: {_settings.GreenGifPath}");
+            Debug.WriteLine($"[GIF保存] 灯透明度: {_settings.GifLightOpacity}");
+            Debug.WriteLine($"[GIF保存] 灯环大小: {_settings.LightRingSize}");
+            Debug.WriteLine($"[GIF保存] GIF大小: {_settings.GifSize}");
+
+            // 立即应用尺寸设置
+            ApplyGifLightSize();
 
             SettingsService.Save(_settings);
 
@@ -1128,9 +1319,9 @@ namespace ClaudeTrafficLight
 
             MessageBox.Show($"GIF动画设置已保存！\n\n" +
                 $"启用状态: {(_settings.EnableGifAnimation ? "✅ 已启用" : "❌ 已禁用")}\n" +
-                $"🟡 黄灯: {(string.IsNullOrEmpty(_settings.YellowGifPath) ? "未设置" : "已设置")}\n" +
-                $"🔴 红灯: {(string.IsNullOrEmpty(_settings.RedGifPath) ? "未设置" : "已设置")}\n" +
-                $"🟢 绿灯: {(string.IsNullOrEmpty(_settings.GreenGifPath) ? "未设置" : "已设置")}",
+                $"🟡 黄灯: {(string.IsNullOrEmpty(_settings.YellowGifPath) ? "未设置" : _settings.YellowGifPath)}\n" +
+                $"🔴 红灯: {(string.IsNullOrEmpty(_settings.RedGifPath) ? "未设置" : _settings.RedGifPath)}\n" +
+                $"🟢 绿灯: {(string.IsNullOrEmpty(_settings.GreenGifPath) ? "未设置" : _settings.GreenGifPath)}",
                 "成功", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 

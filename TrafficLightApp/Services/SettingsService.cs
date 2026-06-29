@@ -34,9 +34,9 @@ public class AppSettings
 
     // LED 显示相关配置
     public double ScrollSpeed { get; set; } = 0.8;        // LED 滚动速度 (像素/次)
-    public int LightWidth { get; set; } = 64;             // 信号灯宽度
-    public int LedWidth { get; set; } = 30;               // LED 文字区域宽度
-    public int TotalWindowWidth { get; set; } = 120;      // 窗口总宽度
+    public int LightWidth { get; set; } = 64;             // 信号灯宽度（64px，与XAML一致）
+    public int LedWidth { get; set; } = 36;               // LED 文字区域宽度
+    public int TotalWindowWidth { get; set; } = 124;      // 窗口总宽度（64+36+24间距）
     public string LedBackground { get; set; } = "#1A000000"; // LED 区域背景色
     public bool StopScrollAfterLoop { get; set; } = true; // 滚动一轮后停止
 
@@ -53,6 +53,9 @@ public class AppSettings
     public string RedGifPath { get; set; } = "";
     public string GreenGifPath { get; set; } = "";
     public bool EnableGifAnimation { get; set; } = true;
+    public double GifLightOpacity { get; set; } = 1.0; // 有GIF时灯的透明度 (0-1)
+    public double LightRingSize { get; set; } = 40.0; // 灯环大小（像素）
+    public double GifSize { get; set; } = 30.0; // GIF显示大小（像素）
 
     // 开机自启配置
     public bool AutoStart { get; set; } = false;
