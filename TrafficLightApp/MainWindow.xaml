@@ -312,14 +312,14 @@
                 Opacity="0.95"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Center"
-                Padding="4">
+                Padding="1">
             <Border.Effect>
                 <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="0" Opacity="0.4"/>
             </Border.Effect>
 
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <!-- 黄灯 - 思考中 -->
-                <Grid Width="56" Height="64" Margin="0,2,0,2">
+                <Grid Width="50" Height="64" Margin="0,2,0,2">
                     <!-- 外层：纯色灯环（奥运奖牌设计） -->
                     <Ellipse x:Name="YellowLightOuter"
                              Width="40" Height="40"
@@ -347,7 +347,7 @@
                 </Grid>
 
                 <!-- 绿灯 - 输出中 -->
-                <Grid Width="56" Height="64" Margin="0,2,0,2">
+                <Grid Width="50" Height="64" Margin="0,2,0,2">
                     <!-- 外层：纯色灯环（奥运奖牌设计） -->
                     <Ellipse x:Name="GreenLightOuter"
                              Width="40" Height="40"
@@ -375,7 +375,7 @@
                 </Grid>
 
                 <!-- 红灯 - 需要确认 -->
-                <Grid Width="56" Height="64" Margin="0,2,0,2">
+                <Grid Width="50" Height="64" Margin="0,2,0,2">
                     <!-- 外层：纯色灯环（奥运奖牌设计） -->
                     <Ellipse x:Name="RedLightOuter"
                              Width="40" Height="40"
